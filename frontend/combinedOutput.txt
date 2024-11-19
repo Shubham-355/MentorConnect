@@ -1,0 +1,2348 @@
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\App.jsx ---
+
+
+import './App.css'
+import { UserProvider } from './UserContext'
+import {BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
+// import Navbar from './components/common/Navbar'
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
+import Session from './pages/Session'
+import Messages from './pages/Messages'
+import Feedback from './pages/Feedback'
+import Settings from './pages/Settings'
+import DashboardLayout from './pages/DashboardLayout'
+import DashboardPage from './pages/DashboardPage'
+import Booking from './pages/Booking'
+import Find from './pages/Find'
+import Meeting from './pages/Meeting'
+import MentorAvailability from './pages/MentorAvailability'
+import { ThemeProvider } from './components/ThemeProvider'
+
+function App() {
+
+  return (
+    <ThemeProvider>
+      <UserProvider>
+        <Router>
+          {/* <Navbar /> */}
+          <Routes>
+            <Route path='/' element={<LandingPage />} />
+            <Route path='/login' element={<LoginPage />} />
+            <Route path='/signup' element={<SignupPage />} />
+            <Route path="/dashboard" element={<DashboardLayout />} >
+              <Route index element={<DashboardPage />}/>
+              <Route path="booking" element={<Booking />} />
+              <Route path="find" element={<Find />} />
+              <Route path="session" element={<Session />} />
+              <Route path="messages" element={<Messages />} />
+              <Route path="feedback" element={<Feedback />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="availability" element={<MentorAvailability />} />
+            </Route>
+            <Route path="/session/:sessionId" element={<Meeting />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </UserProvider>
+    </ThemeProvider>
+  )
+}
+
+export default App
+
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\components\common\Button.jsx ---
+
+
+const Button = ({ children, onClick, variant = 'primary', className = '', ...props }) => {
+    const baseStyle = 'px-4 py-2.5 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2'
+    const variants = {
+      primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+      secondary: 'bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-500',
+    }
+  
+    return (
+      <button
+        className={`${baseStyle} ${variants[variant]} ${className}`}
+        onClick={onClick}
+        {...props}
+      >
+        {children}
+      </button>
+    )
+  }
+  
+  export default Button
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\components\common\CircleChart.jsx ---
+
+import React, { useState, useEffect } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d'];
+
+const CircleChart = ({ data }) => {
+  const [chartSize, setChartSize] = useState({ width: 400, height: 400 });
+  const total = data.reduce((sum, entry) => sum + entry.value, 0);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 480) {
+        setChartSize({ width: 280, height: 280 });
+      } else if (width < 768) {
+        setChartSize({ width: 320, height: 320 });
+      } else {
+        setChartSize({ width: 400, height: 400 });
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    const percentageValue = (percent * 100).toFixed(0);
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        fontSize={chartSize.width < 320 ? "10" : "12"}
+      >
+        {`${percentageValue}%`}
+      </text>
+    );
+  };
+
+  return (
+    <div className="w-full" style={{ height: chartSize.height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            outerRadius={chartSize.width / 3}
+            fill="#8884d8"
+            dataKey="value"
+            label={renderCustomizedLabel}
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip 
+            formatter={(value, label) => [value, label]}
+          />
+          <Legend 
+            layout={chartSize.width < 480 ? "horizontal" : "vertical"} 
+            align="center" 
+            verticalAlign="bottom"
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default CircleChart;
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\components\common\Input.jsx ---
+
+
+import React from 'react';
+
+const Input = ({ label, id, name, type = 'text', required = false, className = '', ...props }) => {
+  return (
+    <div className="mb-4">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      <input
+        type={type}
+        id={id}
+        name={name}
+        required={required}
+        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${className}`}
+        {...props}
+      />
+    </div>
+  );
+};
+
+export default Input;
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\components\common\Navbar.jsx ---
+
+import React, { useContext, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Search, Bell, User } from 'lucide-react';
+import { UserContext } from '../../UserContext';
+
+const Navbar = () => {
+  const { user } = useContext(UserContext);
+  const location = useLocation();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const renderLandingNav = () => {
+    return (
+      <nav className="bg-slate-50">
+        <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
+            <div className="flex-shrink-0">
+              <Link to="/" className="flex items-center">
+                <img className="h-8 w-auto" src="/MentorConnect.svg" alt="MentorConnect" />
+              </Link>
+            </div>
+            <div className="flex-1 flex justify-center space-x-4">
+              <Link to="/about" className="text-black hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium transition transition-75">
+                About
+              </Link>
+              <Link to="/mentors" className="text-black hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium transition transition-75">
+                Find Mentors
+              </Link>
+              <Link to="/become-mentor" className="text-black hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium transition transition-75">
+                Become a Mentor
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link to="/login">
+                <button className="text-black bg-transparent hover:bg-gray-200 px-4 py-2 rounded-md text-sm font-medium">
+                  Log in
+                </button>
+              </Link>
+              <Link to="/signup">
+                <button className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium">
+                  Sign up
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  };
+
+  const renderDashboardNav = () => {
+    return (
+      <nav className="bg-white border-b">
+        <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Link to="/" className="flex items-center">
+                  <img className="h-8 w-auto" src="/MentorConnect.svg" alt="MentorConnect" />
+                </Link>
+              </div>
+              <div className="ml-10 relative flex-1 max-w-xl">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-blue-500"
+                  placeholder="Search mentors, sessions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex items-center space-x-6">
+              <button className="text-gray-500 hover:text-gray-700">
+                <Bell className="h-6 w-6" />
+              </button>
+              <div className="relative">
+                <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
+                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <span className="text-sm font-medium">{user?.name}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  };
+
+  // Return different navbar based on route
+  if (location.pathname === '/') {
+    return renderLandingNav();
+  } else if (user) {
+    return renderDashboardNav();
+  } else {
+    return renderLandingNav();
+  }
+};
+
+export default Navbar;
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\components\common\TextField.jsx ---
+
+
+import TextField from './components/TextField'
+
+function LoginForm() {
+  return (
+    <form>
+      <TextField
+        label="Email"
+        type="email"
+        name="email"
+        required
+        helperText="We'll never share your email with anyone else."
+      />
+      <TextField
+        label="Password"
+        type="password"
+        name="password"
+        required
+        error="Password must be at least 8 characters long"
+      />
+      {/* Add submit button and other form elements */}
+    </form>
+  )
+}
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\components\landing\Features.jsx ---
+
+
+import React, { useEffect, useState } from 'react';
+import { Calendar, MessageSquare, FileText, Share2, BarChart, Users, Twitter, Facebook, Instagram, Linkedin  } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import Button from '../common/Button';
+
+const FeatureCard = ({ icon, title, description, isActive }) => (
+  <div className={`bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center transform transition-all duration-500 ${
+    isActive ? 'scale-105 border-2 border-indigo-500' : 'hover:scale-102'
+  }`}>
+    <div className={`${isActive ? 'bg-indigo-500' : 'bg-indigo-100'} rounded-full p-3 mb-4 transition-colors duration-300`}>
+      {icon}
+    </div>
+    <h3 className="text-xl font-semibold mb-2">{title}</h3>
+    <p className="text-gray-600">{description}</p>
+  </div>
+);
+
+const Features = () => {
+
+    const [isChecked, setIsChecked] = useState(false);
+    const [activeFeature, setActiveFeature] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(true);
+
+    const handleCheckboxChange = () => {
+      setIsChecked(!isChecked);
+    };  
+
+    useEffect(() => {
+      if (isPlaying) {
+        const interval = setInterval(() => {
+          setActiveFeature((prev) => (prev + 1) % features.length);
+        }, 3000);
+        return () => clearInterval(interval);
+      }
+    }, [isPlaying]);
+
+  const features = [
+    {
+      icon: <MessageSquare className="h-8 w-8 text-indigo-600" />,
+      title: "Smart Chat",
+      description: "Real-time messaging with AI-powered topic suggestions"
+    },
+    {
+      icon: <Calendar className="h-8 w-8 text-indigo-600" />,
+      title: "Session Booking",
+      description: "Efficient scheduling with calendar integration"
+    },
+    {
+      icon: <FileText className="h-8 w-8 text-indigo-600" />,
+      title: "Resume Building",
+      description: "Professional resume templates and expert feedback"
+    },
+    {
+      icon: <Share2 className="h-8 w-8 text-indigo-600" />,
+      title: "Resource Sharing",
+      description: "Curated learning materials and industry insights"
+    },
+    {
+      icon: <BarChart className="h-8 w-8 text-indigo-600" />,
+      title: "Progress Tracking",
+      description: "Detailed analytics and growth metrics"
+    },
+    {
+      icon: <Users className="h-8 w-8 text-indigo-600" />,
+      title: "Community",
+      description: "Connect with peers and industry experts"
+    }
+  ];
+
+  return (
+    <section className="pt-16 bg-gray-50 font-[manrope]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            Why Choose MentorConnect?
+          </h2>
+          <p className="mt-4 text-xl text-gray-600">
+            Discover the benefits of our mentorship platform
+          </p>
+        </div>
+        <div>
+            <div className="relative flex flex-col items-center mb-12">
+            {/* Container for the images */}
+            <div className="relative w-9/12 h-3/6 p-2">
+                {/* Conditionally render images based on checkbox state */}
+                <img
+                src={isChecked ? "/Frame 57.png" : "/Component.png"}
+                alt={isChecked ? "Second" : "First"}
+                className="w-full h-full object-cover rounded-lg"
+                />
+            </div>
+
+            {/* Checkbox below the images */}
+            <div className="mt-4">
+                <label className="flex items-center space-x-2">
+                <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={handleCheckboxChange}
+                    className="form-checkbox h-5 w-5"
+                />
+                <span>Imagine without Mentor Connect</span>
+                </label>
+            </div>
+            </div>
+        </div>
+        <div className="relative">
+          <div className="flex justify-between items-center mb-8">
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="text-indigo-600 hover:text-indigo-700 ml-auto"
+            >
+              {isPlaying ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={index}
+                {...feature}
+                isActive={index === activeFeature}
+                onMouseEnter={() => {
+                  setActiveFeature(index);
+                  setIsPlaying(false);
+                }}
+              />
+            ))}
+          </div>
+        <div className='my-10'>
+          <div className='my-7 font-semibold text-xl'>What our mentees are saying</div>
+          <div className='flex items-center'>
+            <div className='flex-1 border-2 h-40 mr-10 p-4 rounded-lg'>
+              <div className=''><img src="menteeuser.png" alt="" /></div>
+              <div className='py-2 font-semibold'>I am new here but idk how to express things and i am here to shre my experience</div>
+            </div>
+            <div className='flex-1 border-2 h-40 mr-10 p-4 rounded-lg'>
+              <div className=''><img src="menteeuser1.png" alt="" /></div>
+              <div className='py-2 font-semibold'>I am new here but idk how to express things that can be idk how to express but i will try to express</div>
+            </div>
+            <div className='flex-1 border-2 h-40 p-4 rounded-lg'>
+              <div className=''><img src="menteeuser2.png" alt="" /></div>
+              <div className='py-2 font-semibold'>I am new here but idk how to express things</div>
+            </div>
+          </div>
+        </div>
+        <div className=''>
+          <div className='my-7 font-semibold text-xl'>
+            What our members says
+          </div>
+          <div className='my-7'>
+            <div className='font-semibold text-lg'>Maya H.</div>
+            <div className='text-teal-500'>2 days ago</div>
+            <div className='my-2 flex w-5'>
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+            </div>
+            <div>I've been using this platform for a few months now, and it's been incredibly helpful. I've gotten some great advice from my mentor, and I feel much more confident about my career. Highly recommend!</div>
+          </div>
+          <div className='my-7'>
+            <div className='font-semibold text-lg'>Brandon K.</div>
+            <div className='text-teal-500'>1 week ago</div>
+            <div className='my-2 flex w-5'>
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+            </div>
+            <div>I've been mentor on this platform for a while, and it's been a great experience</div>
+            </div>
+          <div className='my-7'> 
+            <div className='font-semibold text-lg'>Lily L.</div>
+            <div className='text-teal-500'>3 weeks ago</div>
+            <div className='my-2 flex w-5'>
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+              <img src="2893811.png" alt="" />
+            </div>
+            <div>This platform has been gaem changes for me. I was feeling stuck in my career, but my mentor has helped me see things from a different prespective. I'm learning new skills and making progress towards my goals. So greatful for this platform!</div>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div className='bg-blue-500 w-full p-2'>
+        <div className='text-4xl text-center text-white m-6 font-bold bg-blue'>Ready to take your career to the next level?</div>
+        <div className='my-10 text-center'>
+          <Link className='text-center ' to="/signup">
+            <Button variant="secondary">Find a Mentor</Button>
+          </Link>
+        </div>
+        <div className='flex space-x-4 text-white justify-center mb-5'>
+          <div><Twitter /></div>
+          <div><Facebook /></div>
+          <div><Instagram /></div>
+          <div><Linkedin /></div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Features;
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\components\landing\Hero.jsx ---
+
+import { Link } from 'react-router-dom'
+import Button from '../common/Button'
+import { ArrowRight } from 'lucide-react'
+
+const Hero = () => {
+  return (
+    <div className="relative overflow-hidden bg-white">
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-purple-100 opacity-50" />
+      <div className="absolute inset-0">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"
+            style={{
+              backgroundColor: `hsla(${Math.random() * 360}, 70%, 70%, 0.4)`,
+              width: `${Math.random() * 400 + 100}px`,
+              height: `${Math.random() * 400 + 100}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animation: `blob ${Math.random() * 10 + 20}s infinite`,
+              animationDelay: `${Math.random() * -20}s`
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center transform transition-all duration-1000 translate-y-0 opacity-100">
+          <h1 className="text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            Transform Your Career with
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+              {' Expert Mentorship'}
+            </span>
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Connect with industry leaders, accelerate your growth, and achieve your professional goals
+          </p>
+
+          <div className="flex justify-center gap-4">
+            <Link to="/signup">
+              <Button variant="primary" className="flex items-center">
+                Get Started Now
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button variant="secondary">Watch Demo</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Hero
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\components\ThemeProvider.jsx ---
+
+import React, { createContext, useContext, useEffect, useState } from 'react'
+
+const ThemeContext = createContext()
+
+export const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState('light')
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme) {
+      setTheme(savedTheme)
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark')
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme)
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [theme])
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  )
+}
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext)
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
+  return context
+}
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\hooks\useUser.jsx ---
+
+import { useContext } from 'react'
+import { UserContext } from '../UserContext'
+
+export const useUser = () => {
+  const context = useContext(UserContext)
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider')
+  }
+  return context
+}
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\main.jsx ---
+
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\Booking.jsx ---
+
+import React, { useState, useEffect, useContext } from 'react'
+import { useParams } from 'react-router-dom'
+import { UserContext } from '../UserContext'
+import Button from '../components/common/Button'
+
+const Booking = () => {
+  const { mentorId } = useParams()
+  const { user } = useContext(UserContext)
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [selectedTime, setSelectedTime] = useState(null)
+  const [mentor, setMentor] = useState(null)
+
+  useEffect(() => {
+    // In a real app, you would fetch the mentor data from your API
+    // For now, we'll use mock data
+    setMentor({
+      id: mentorId,
+      name: 'Sarah Johnson',
+      role: 'Senior Product Manager at Google',
+      availability: {
+        Mon: { '10:00 AM': true, '02:00 PM': true },
+        Wed: { '11:00 AM': true, '03:00 PM': true },
+        Fri: { '09:00 AM': true, '01:00 PM': true },
+      }
+    })
+  }, [mentorId])
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date)
+    setSelectedTime(null)
+  }
+
+  const handleTimeSelect = (time) => {
+    setSelectedTime(time)
+  }
+
+  const handleBooking = () => {
+    // Here you would send the booking data to your backend
+    console.log('Booking:', { mentorId, selectedDate, selectedTime })
+    // Then redirect to a confirmation page or show a success message
+  }
+
+  if (!mentor) return <div>Loading...</div>
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-8 flex items-center gap-4">
+        <img
+          src="/placeholder.svg"
+          alt={mentor.name}
+          className="w-16 h-16 rounded-full object-cover"
+        />
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Book a Session with {mentor.name}</h1>
+          <p className="text-gray-500">{mentor.role}</p>
+        </div>
+      </div>
+
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold mb-4">Select Date & Time</h2>
+          <div className="mb-6">
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {Object.keys(mentor.availability).map((day, index) => {
+                const date = new Date()
+                date.setDate(date.getDate() + index)
+                return (
+                  <button
+                    key={day}
+                    onClick={() => handleDateSelect(date)}
+                    className={`p-2 text-center rounded-lg ${
+                      selectedDate?.toDateString() === date.toDateString()
+                        ? 'bg-blue-600 text-white'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="text-xs">{day}</div>
+                    <div className="font-semibold">{date.getDate()}</div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {selectedDate && (
+            <div>
+              <h3 className="font-medium mb-4">Available Time Slots</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.keys(mentor.availability[Object.keys(mentor.availability)[selectedDate.getDay()]]).map((time) => (
+                  <Button
+                    key={time}
+                    variant={selectedTime === time ? 'primary' : 'secondary'}
+                    onClick={() => handleTimeSelect(time)}
+                    className="w-full"
+                  >
+                    {time}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold mb-4">Session Details</h2>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-2">Session Type</h3>
+              <p className="text-gray-600">1-on-1 Career Coaching</p>
+            </div>
+            <div>
+              <h3 className="font-medium mb-2">Duration</h3>
+              <p className="text-gray-600">60 minutes</p>
+            </div>
+            <div>
+              <h3 className="font-medium mb-2">Price</h3>
+              <p className="text-2xl font-bold text-gray-900">$120</p>
+            </div>
+            <Button
+              variant="primary"
+              className="w-full mt-6"
+              disabled={!selectedDate || !selectedTime}
+              onClick={handleBooking}
+            >
+              Confirm Booking
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Booking
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\Chat.jsx ---
+
+import React, { useState, useRef, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { Send, Paperclip, Smile } from 'lucide-react'
+import Navbar from '../components/common/Navbar'
+import Button from '../components/common/Button'
+
+const Chat = () => {
+  const { chatId } = useParams()
+  const [messages, setMessages] = useState([
+    {
+      id: '1',
+      content: "Hi, I'm looking forward to our session!",
+      sender: 'other',
+      timestamp: new Date(Date.now() - 3600000),
+    },
+    {
+      id: '2',
+      content: 'Hello! Yes, me too! Do you have any specific topics you'd like to focus on?',
+      sender: 'user',
+      timestamp: new Date(Date.now() - 3500000),
+    },
+  ])
+  const [newMessage, setNewMessage] = useState('')
+  const messagesEndRef = useRef(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const handleSend = () => {
+    if (!newMessage.trim()) return
+
+    setMessages([
+      ...messages,
+      {
+        id: Date.now().toString(),
+        content: newMessage,
+        sender: 'user',
+        timestamp: new Date(),
+      },
+    ])
+    setNewMessage('')
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white border-b border-gray-200 p-4">
+          <div className="flex items-center space-x-4">
+            <img
+              src="/placeholder.svg"
+              alt="Sarah Johnson"
+              className="w-10 h-10 rounded-full"
+            />
+            <div>
+              <h2 className="font-semibold text-gray-900">Sarah Johnson</h2>
+              <p className="text-sm text-gray-500">Senior Product Manager</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-[calc(100vh-16rem)] overflow-y-auto p-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex mb-4 ${
+                message.sender === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div
+                className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                  message.sender === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                }`}
+              >
+                <p>{message.content}</p>
+                <p className="text-xs opacity-70 mt-1">
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="bg-white border-t border-gray-200 p-4">
+          <div className="flex items-center space-x-2">
+            <button className="p-2 text-gray-400 hover:text-gray-600">
+              <Paperclip className="w-5 h-5" />
+            </button>
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type a message..."
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button className="p-2 text-gray-400 hover:text-gray-600">
+              <Smile className="w-5 h-5" />
+            </button>
+            <Button variant="primary" onClick={handleSend}>
+              <Send className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Chat
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\DashboardLayout.jsx ---
+
+import React, { useState, useContext } from 'react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Bell, Book, Calendar, HelpCircle, LayoutDashboard, LogOut, Menu, MessageCircle, Search, Settings, Star, User, X } from 'lucide-react'
+import { UserContext } from '../UserContext'
+import Button from '../components/common/Button'
+import Navbar from '../components/common/Navbar'
+
+const DashboardLayout = () => {
+  const { user, logout } = useContext(UserContext);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  const navItems = [
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/dashboard/find', icon: Search, label: 'Find' },
+    { path: '/dashboard/booking', icon: Book, label: 'Booking' },
+    { path: '/dashboard/session', icon: Calendar, label: 'Sessions' },
+    { path: '/dashboard/messages', icon: MessageCircle, label: 'Message' },
+    { path: '/dashboard/feedback', icon: Star, label: 'Feedback' },
+    { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
+  ];
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  return (
+    <div>
+      <Navbar />
+      <div className="flex min-h-screen bg-gray-50">
+        {/* Sidebar */}
+        <nav className={`bg-white w-64 min-h-screen ${isSidebarOpen ? 'block' : 'hidden'} md:block`}>
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center px-4 py-2 mt-2 text-gray-600 hover:bg-gray-100 ${
+                location.pathname === item.path ? 'bg-gray-100 text-gray-900' : ''
+              }`}
+            >
+              <item.icon className="h-5 w-5 mr-2" />
+              {item.label}
+            </Link>
+          ))}
+          <button
+            onClick={logout}
+            className="flex items-center px-4 py-2 mt-2 text-gray-600 hover:bg-gray-100 w-full"
+          >
+            <LogOut className="h-5 w-5 mr-2" />
+            Logout
+          </button>
+        </nav>
+
+        {/* Main Content */}
+        <div className="flex-1 p-10">
+          <Button
+            onClick={toggleSidebar}
+            className="md:hidden mb-4"
+          >
+            {isSidebarOpen ? <X /> : <Menu />}
+          </Button>
+          <main className="container mx-auto">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default DashboardLayout
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\DashboardPage.jsx ---
+
+import React, { useContext } from 'react'
+import { Link } from 'react-router-dom'
+import { Star } from 'lucide-react'
+import { UserContext } from '../UserContext'
+import CircleChart from '../components/common/CircleChart'
+
+const Skeleton = ({ className }) => (
+  <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
+)
+
+const DashboardPage = () => {
+  const { user } = useContext(UserContext)
+
+  const upcomingSessions = [
+    {
+      id: 1,
+      mentee: 'Sarah Johnson',
+      type: 'Career coaching',
+      time: '7:00 PM PST, 10/25',
+      duration: '1 hour',
+      price: 90,
+      avatar: '/placeholder.svg',
+    },
+  ]
+
+  const feedbackRequests = [
+    {
+      id: 1,
+      mentee: 'Sarah Johnson',
+      type: 'Career coaching',
+      time: '1 hour • 7:00 PM PST, 10/25',
+      avatar: '/placeholder.svg',
+    },
+  ]
+
+  const chartData = [
+    { name: 'airfare', value: 20 },
+    { name: 'food', value: 24 },
+    { name: 'accommodation', value: 20 },
+    { name: 'transportation', value: 14 },
+    { name: 'activities', value: 12 },
+    { name: 'misc', value: 10 },
+  ]
+
+  return (
+    <div className='mt-5 font-[manrope] px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto'>
+      {/* User Info */}
+      <div className='flex items-center mb-6'>
+        <div className='mr-4'>
+          <img src={user?.avatar || "/placeholder.svg"} alt="" className="w-16 h-16 rounded-full" />
+        </div>
+        <div className='text-2xl sm:text-3xl md:text-4xl font-bold'>
+          Welcome back, {user?.name}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+        <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 transition-shadow hover:shadow-md">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-2">5</h3>
+          <p className="text-gray-500">Upcoming sessions</p>
+        </div>
+        <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 transition-shadow hover:shadow-md">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-2">2</h3>
+          <p className="text-gray-500">Message requests</p>
+        </div>
+        <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 transition-shadow hover:shadow-md">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-2">2</h3>
+          <p className="text-gray-500">Feedback requests</p>
+        </div>
+      </div>
+
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Upcoming Sessions */}
+        <div className="bg-white rounded-lg border border-gray-200 transition-shadow hover:shadow-md">
+          <div className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+                Your upcoming sessions
+              </h2>
+              <Link
+                to="/dashboard/session"
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="space-y-4">
+              {upcomingSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className="flex items-center justify-between p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <img
+                      src={session.avatar}
+                      alt={session.mentee}
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+                    />
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm sm:text-base">
+                        {session.type}
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-500">{session.time}</p>
+                    </div>
+                  </div>
+                  <span className="font-medium text-gray-900 text-sm sm:text-base">
+                    ${session.price}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Session Stats */}
+        <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 transition-shadow hover:shadow-md">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">
+            Progress Stats
+          </h2>
+          <CircleChart data={chartData}/>
+        </div>
+
+        {/* Feedback Requests */}
+        <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 transition-shadow hover:shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+              Feedback requests
+            </h2>
+            <Link
+              to="/dashboard/feedback"
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              View all
+            </Link>
+          </div>
+          <div className="space-y-4">
+            {feedbackRequests.map((request) => (
+              <div
+                key={request.id}
+                className="flex items-center justify-between p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <img
+                    src={request.avatar}
+                    alt={request.mentee}
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+                  />
+                  <div>
+                    <p className="font-medium text-gray-900 text-sm sm:text-base">
+                      {request.type}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500">{request.time}</p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      className="text-gray-300 hover:text-yellow-400 transition-colors"
+                      aria-label={`Rate ${star} stars`}
+                    >
+                      <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default DashboardPage
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\Feedback.jsx ---
+
+import React, { useState } from 'react';
+import { Star } from 'lucide-react';
+
+function Feedback() {
+  const [rating, setRating] = useState(0);
+  const [feedback, setFeedback] = useState('');
+  
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md">
+        <div className="p-6">
+          <h1 className="text-2xl font-bold mb-6">Session Feedback</h1>
+        
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-600 font-semibold">M</span>
+              </div>
+              <div>
+                <h2 className="font-semibold">Career Coaching Session</h2>
+                <p className="text-sm text-gray-500">with Sarah Johnson</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                How would you rate this session?
+              </label>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    className={`p-2 rounded-md hover:bg-gray-100`}
+                    onClick={() => setRating(star)}
+                  >
+                    <Star 
+                      className={`h-6 w-6 ${
+                        rating >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
+                      } hover:text-yellow-400 hover:fill-yellow-400`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label 
+                htmlFor="feedback"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Share your experience
+              </label>
+              <textarea
+                id="feedback"
+                placeholder="What did you learn? How was the mentor? Any suggestions for improvement?"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                className="w-full min-h-[150px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <button
+              type="button"
+              className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Submit Feedback
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Feedback;
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\Find.jsx ---
+
+'use client'
+
+import React, { useState } from 'react'
+import { Search } from 'lucide-react'
+import { Link } from 'react-router-dom'
+
+function Find() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedExpertise, setSelectedExpertise] = useState('all')
+
+  const mentors = [
+    {
+      id: '1',
+      name: 'Sarah Johnson',
+      role: 'Senior Product Manager',
+      company: 'Google',
+      expertise: ['Product Management', 'Career Development', 'Leadership'],
+      rating: 4.8,
+      price: 120,
+      avatar: '/placeholder.svg?height=40&width=40',
+    },
+    {
+      id: '2',
+      name: 'Michael Chen',
+      role: 'Engineering Director',
+      company: 'Microsoft',
+      expertise: ['Software Engineering', 'Team Management', 'System Design'],
+      rating: 4.9,
+      price: 150,
+      avatar: '/placeholder.svg?height=40&width=40',
+    },
+    // Add more mentors as needed
+  ]
+
+  const filteredMentors = mentors.filter((mentor) => {
+    const matchesSearch =
+      mentor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mentor.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mentor.company.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesExpertise =
+      selectedExpertise === 'all' || mentor.expertise.includes(selectedExpertise)
+
+    return matchesSearch && matchesExpertise
+  })
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-4">Find Your Mentor</h1>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <input
+              className="w-full pl-10 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search by name, role, or company"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <select
+            className="w-full md:w-[200px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={selectedExpertise}
+            onChange={(e) => setSelectedExpertise(e.target.value)}
+          >
+            <option value="all">All Expertise</option>
+            <option value="Product Management">Product Management</option>
+            <option value="Software Engineering">Software Engineering</option>
+            <option value="Career Development">Career Development</option>
+            <option value="Leadership">Leadership</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {filteredMentors.map((mentor) => (
+          <div key={mentor.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                  <img
+                    src={mentor.avatar}
+                    alt={mentor.name}
+                    className="h-full w-full rounded-full"
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23cccccc"/><text x="50%" y="50%" font-size="20" text-anchor="middle" dy=".3em" fill="%23ffffff">' + mentor.name[0] + '</text></svg>';
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Link to={`/mentors/${mentor.id}`} className="font-semibold hover:underline">
+                    {mentor.name}
+                  </Link>
+                  <p className="text-sm text-gray-500">
+                    {mentor.role} at {mentor.company}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-yellow-500">★</span>
+                  <span className="font-medium">{mentor.rating}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {mentor.expertise.map((skill) => (
+                    <span
+                      key={skill}
+                      className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                <span className="text-lg font-bold">${mentor.price}/hour</span>
+                <Link to={`/book/${mentor.id}`}>
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Book Session
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default Find
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\LandingPage.jsx ---
+
+import Hero from '../components/landing/Hero'
+import Features from '../components/landing/Features'
+import Navbar from '../components/common/Navbar'
+
+const LandingPage = () => {
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <Navbar />
+          <Hero />
+          <Features />
+        </div>
+      )
+}
+
+export default LandingPage
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\LoginPage.jsx ---
+
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { UserContext } from '../UserContext';
+import Navbar from '../components/common/Navbar';
+import Button from '../components/common/Button';
+import Input from '../components/common/Input';
+
+const LoginPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { login } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Here you would typically make an API call to authenticate the user
+    // For this example, we'll just simulate a successful login
+    login({ email, role: 'mentee' });
+    navigate('/dashboard');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="max-w-md mx-auto pt-16">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Log in to your account</h2>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              label="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              label="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <div>
+              <Button type="submit" variant="primary" className="w-full">
+                Log in
+              </Button>
+            </div>
+          </form>
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or</span>
+              </div>
+            </div>
+            <div className="mt-6">
+              <Link to="/signup" className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                Create new account
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\Meeting.jsx ---
+
+import React, { useState, useRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  Mic, MicOff, Video, VideoOff, MoreVertical, 
+  MessageSquare, Users, PhoneOff, Send, Paperclip, Smile,
+  Share, Settings
+} from 'lucide-react';
+
+const ChatMessage = ({ sender, content, timestamp, isCurrentUser }) => (
+  <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4`}>
+    <div
+      className={`max-w-[70%] rounded-lg px-4 py-2 ${
+        isCurrentUser ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'
+      }`}
+    >
+      <p className="font-medium">{sender}</p>
+      <p>{content}</p>
+      <p className="text-xs opacity-70 mt-1">
+        {new Date(timestamp).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        })}
+      </p>
+    </div>
+  </div>
+);
+
+const ParticipantList = ({ participants }) => (
+  <div className="space-y-4">
+    {participants.map((participant) => (
+      <div key={participant.id} className="flex items-center space-x-3">
+        <img
+          src={participant.avatar || "/placeholder.svg"}
+          alt={participant.name}
+          className="w-10 h-10 rounded-full"
+        />
+        <div>
+          <p className="font-medium">{participant.name}</p>
+          <p className="text-sm text-gray-500">{participant.role}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const Meeting = () => {
+  const { sessionId } = useParams();
+  const navigate = useNavigate();
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [activeTab, setActiveTab] = useState('chat');
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      sender: 'John Doe',
+      content: 'Hello everyone!',
+      timestamp: new Date(Date.now() - 3600000),
+      isCurrentUser: false,
+    },
+    {
+      id: 2,
+      sender: 'You',
+      content: 'Hi John, looking forward to our session!',
+      timestamp: new Date(Date.now() - 3500000),
+      isCurrentUser: true,
+    },
+  ]);
+  const [newMessage, setNewMessage] = useState('');
+  const [participants, setParticipants] = useState([
+    { id: 1, name: 'John Doe', role: 'Mentor', avatar: '/placeholder.svg' },
+    { id: 2, name: 'You', role: 'Mentee', avatar: '/placeholder.svg' },
+  ]);
+  
+  const messagesEndRef = useRef(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim()) return;
+
+    setMessages([
+      ...messages,
+      {
+        id: Date.now(),
+        sender: 'You',
+        content: newMessage,
+        timestamp: new Date(),
+        isCurrentUser: true,
+      },
+    ]);
+    setNewMessage('');
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleEndCall = () => {
+    navigate('/dashboard/session');
+  };
+
+  const toggleScreenShare = () => {
+    setIsScreenSharing(!isScreenSharing);
+    // Implement actual screen sharing logic here
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-100">
+      <main className="flex-grow flex">
+        {/* Left side - Video area */}
+        <div className="flex-grow flex flex-col">
+          {/* Main video */}
+          <div className="flex-grow relative bg-gray-900">
+            <video
+              className="w-full h-full object-cover"
+              src="/api/placeholder/1280/720"
+              autoPlay
+              muted
+              loop
+            />
+            {/* Participant video overlay */}
+            <div className="absolute bottom-4 right-4 w-1/4 aspect-video bg-gray-800 rounded-lg overflow-hidden">
+              <video
+                className="w-full h-full object-cover"
+                src="/api/placeholder/480/360"
+                autoPlay
+                muted
+                loop
+              />
+            </div>
+          </div>
+
+          {/* Bottom controls */}
+          <div className="bg-white p-4 flex justify-between items-center">
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setIsMicOn(!isMicOn)}
+                className={`p-3 rounded-full ${
+                  isMicOn ? 'bg-gray-200' : 'bg-red-500 text-white'
+                }`}
+              >
+                {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={() => setIsVideoOn(!isVideoOn)}
+                className={`p-3 rounded-full ${
+                  isVideoOn ? 'bg-gray-200' : 'bg-red-500 text-white'
+                }`}
+              >
+                {isVideoOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={toggleScreenShare}
+                className={`p-3 rounded-full ${
+                  isScreenSharing ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                <Share className="w-5 h-5" />
+              </button>
+              <button className="p-3 rounded-full bg-gray-200">
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
+            <button
+              onClick={handleEndCall}
+              className="bg-red-500 text-white px-6 py-3 rounded-full flex items-center space-x-2"
+            >
+              <PhoneOff className="w-5 h-5" />
+              <span className="hidden sm:inline">End Call</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Right side - Chat and participants */}
+        <div className={`${isSidebarOpen ? 'w-80' : 'w-0'} bg-white border-l border-gray-200 flex flex-col transition-all duration-300 ease-in-out overflow-hidden`}>
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200">
+            <button
+              className={`flex-1 py-4 px-4 font-medium ${
+                activeTab === 'chat'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500'
+              }`}
+              onClick={() => setActiveTab('chat')}
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <MessageSquare className="w-5 h-5" />
+                <span>Chat</span>
+              </div>
+            </button>
+            <button
+              className={`flex-1 py-4 px-4 font-medium ${
+                activeTab === 'participants'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500'
+              }`}
+              onClick={() => setActiveTab('participants')}
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <Users className="w-5 h-5" />
+                <span>People</span>
+              </div>
+            </button>
+          </div>
+
+          {/* Content area */}
+          <div className="flex-grow overflow-y-auto p-4">
+            {activeTab === 'chat' ? (
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <ChatMessage key={message.id} {...message} />
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            ) : (
+              <ParticipantList participants={participants} />
+            )}
+          </div>
+
+          {/* Chat input */}
+          {activeTab === 'chat' && (
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex items-center space-x-2">
+                <button className="p-2 text-gray-400 hover:text-gray-600">
+                  <Paperclip className="w-5 h-5" />
+                </button>
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type a message..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button className="p-2 text-gray-400 hover:text-gray-600">
+                  <Smile className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleSendMessage}
+                  className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+      {/* Toggle sidebar button */}
+      <button
+        onClick={toggleSidebar}
+        className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-white p-2 rounded-l-md shadow-md"
+      >
+        {isSidebarOpen ? <MoreVertical className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+      </button>
+    </div>
+  );
+};
+
+export default Meeting;
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\MentorAvailability.jsx ---
+
+import React, { useState, useContext } from 'react'
+import { UserContext } from '../UserContext'
+import Button from '../components/common/Button'
+
+const MentorAvailability = () => {
+  const { user, updateUser } = useContext(UserContext);
+  const [availability, setAvailability] = useState(user.availability || {});
+
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const timeSlots = [
+    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+    '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
+  ];
+
+  const handleAvailabilityChange = (day, time) => {
+    setAvailability(prev => ({
+      ...prev,
+      [day]: {
+        ...(prev[day] || {}),
+        [time]: !(prev[day] && prev[day][time])
+      }
+    }));
+  };
+
+  const saveAvailability = () => {
+    updateUser({ availability });
+    // Here you would typically also send this data to your backend
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Set Your Availability</h1>
+      <div className="grid grid-cols-8 gap-4">
+        <div></div>
+        {timeSlots.map(time => (
+          <div key={time} className="text-center text-sm font-medium">{time}</div>
+        ))}
+        {days.map(day => (
+          <React.Fragment key={day}>
+            <div className="font-medium">{day}</div>
+            {timeSlots.map(time => (
+              <div key={`${day}-${time}`} className="text-center">
+                <input
+                  type="checkbox"
+                  checked={availability[day] && availability[day][time]}
+                  onChange={() => handleAvailabilityChange(day, time)}
+                  className="form-checkbox h-5 w-5 text-blue-600"
+                />
+              </div>
+            ))}
+          </React.Fragment>
+        ))}
+      </div>
+      <Button onClick={saveAvailability} className="mt-6">Save Availability</Button>
+    </div>
+  )
+}
+
+export default MentorAvailability
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\Messages.jsx ---
+
+import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Search } from 'lucide-react'
+import Navbar from '../components/common/Navbar'
+import Input from '../components/common/Input'
+
+const chats = [
+  {
+    id: '1',
+    name: 'Sarah Johnson',
+    avatar: '/placeholder.svg',
+    lastMessage: "Hi, I'm looking forward to our session!",
+    timestamp: new Date(),
+    unread: true,
+  },
+  {
+    id: '2',
+    name: 'Michael Chen',
+    avatar: '/placeholder.svg',
+    lastMessage: 'Thank you for the great session!',
+    timestamp: new Date(Date.now() - 3600000),
+    unread: false,
+  },
+]
+
+const Messages = () => {
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredChats = chats.filter((chat) =>
+    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white border-b border-gray-200">
+          <div className="px-4 py-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search messages"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="divide-y divide-gray-200">
+          {filteredChats.map((chat) => (
+            <Link
+              key={chat.id}
+              to={`/chat/${chat.id}`}
+              className="block hover:bg-gray-50"
+            >
+              <div className="px-4 py-4 sm:px-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <img
+                      className="h-12 w-12 rounded-full"
+                      src={chat.avatar}
+                      alt={chat.name}
+                    />
+                    <div className="ml-4">
+                      <p className={`text-sm font-medium ${
+                        chat.unread ? 'text-blue-600' : 'text-gray-900'
+                      }`}>
+                        {chat.name}
+                      </p>
+                      <p className={`text-sm ${
+                        chat.unread ? 'text-gray-900' : 'text-gray-500'
+                      }`}>
+                        {chat.lastMessage}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="ml-2 flex-shrink-0">
+                    <p className="text-sm text-gray-500">
+                      {chat.timestamp.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Messages
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\Profile.jsx ---
+
+import React from 'react'
+import { useParams } from 'react-router-dom'
+import { MessageSquare } from 'lucide-react'
+import Navbar from '../components/common/Navbar'
+import Button from '../components/common/Button'
+
+const expertise = [
+  'Product Management',
+  'Career Advice',
+  'Interview Prep',
+  'Resume Review',
+  'Salary Negotiation',
+  'Startups',
+  'Leadership',
+  'Personal Development',
+  'Work-Life Balance',
+]
+
+const industries = [
+  'Tech',
+  'Finance',
+  'Consulting',
+  'Healthcare',
+  'Retail',
+  'E-Commerce',
+  'Education',
+  'Non-Profit',
+  'Government',
+]
+
+const Profile = () => {
+  const { userId } = useParams()
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <img
+                  src="/placeholder.svg"
+                  alt="Balaji"
+                  className="w-20 h-20 rounded-full"
+                />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Balaji</h1>
+                  <p className="text-gray-500">Product Manager at Stripe</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <Button variant="secondary">Request Mentorship</Button>
+                <Button variant="primary">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Message
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Expertise</h2>
+              <div className="flex flex-wrap gap-2">
+                {expertise.map((skill) => (
+                  <span
+                    key={skill}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Industry</h2>
+              <div className="flex flex-wrap gap-2">
+                {industries.map((industry) => (
+                  <span
+                    key={industry}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm"
+                  >
+                    {industry}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
+              <p className="text-gray-600">
+                Product Manager with 10+ years of experience in tech. Passionate about helping others
+                grow in their careers and achieve their professional goals. Expertise in product
+                strategy, team leadership, and career development.
+              </p>
+            </div>
+
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Experience</h2>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <img
+                    src="/placeholder.svg"
+                    alt="Stripe"
+                    className="w-12 h-12 rounded-full"
+                  />
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Product Manager</h3>
+                    <p className="text-sm text-gray-500">Stripe • 2020 - Present</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <img
+                    src="/placeholder.svg"
+                    alt="Google"
+                    className="w-12 h-12 rounded-full"
+                  />
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Senior Product Manager</h3>
+                    <p className="text-sm text-gray-500">Google • 2015 - 2020</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Profile
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\Session.jsx ---
+
+import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Video } from 'lucide-react'
+import Navbar from '../components/common/Navbar'
+import Button from '../components/common/Button'
+
+const sessions = [
+  {
+    id: 1,
+    title: 'Building your career in tech',
+    mentor: 'John Doe',
+    date: new Date(2024, 0, 9, 10, 50),
+    type: 'Career coaching',
+    status: 'upcoming',
+    avatar: '/placeholder.svg',
+  },
+  {
+    id: 2,
+    title: 'Resume review & interview prep',
+    mentor: 'Jane Smith',
+    date: new Date(2024, 0, 14, 10, 50),
+    type: 'Career coaching',
+    status: 'upcoming',
+    avatar: '/placeholder.svg',
+  },
+  {
+    id: 3,
+    title: 'Leadership skills development',
+    mentor: 'Sarah Johnson',
+    date: new Date(2023, 11, 20, 14, 30),
+    type: 'Career coaching',
+    status: 'past',
+    avatar: '/placeholder.svg',
+  },
+]
+
+const Sessions = () => {
+  const [activeTab, setActiveTab] = useState('upcoming')
+
+  const filteredSessions = sessions.filter(session => session.status === activeTab)
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Sessions</h1>
+          <Button variant="primary">Schedule</Button>
+        </div>
+
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              {['upcoming', 'past', 'cancelled'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`${
+                    activeTab === tab
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {filteredSessions.map((session) => (
+            <div
+              key={session.id}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={session.avatar}
+                    alt={session.mentor}
+                    className="w-12 h-12 rounded-full"
+                  />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{session.title}</h3>
+                    <p className="text-sm text-gray-500">with {session.mentor}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-sm text-gray-500">{session.type}</p>
+                    <p className="font-medium">
+                      {session.date.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                  {session.status === 'upcoming' ? (
+                    <Link to={`/session/${session.id}`}>
+                      <Button variant="primary">
+                        <Video className="w-4 h-4 mr-2" />
+                        Join Session
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to={`/feedback/${session.id}`}>
+                      <Button variant="secondary">Leave Feedback</Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {filteredSessions.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No {activeTab} sessions</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Sessions
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\Settings.jsx ---
+
+
+const Settings = () => {
+    return (
+        <div>
+        I am setting
+        </div>
+    )
+}
+
+export default Settings
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\pages\SignupPage.jsx ---
+
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../UserContext';
+import Navbar from '../components/common/Navbar';
+import Button from '../components/common/Button';
+import Input from '../components/common/Input';
+
+const SignupPage = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('mentee');
+  const { login } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Here you would typically make an API call to register the user
+    // For this example, we'll just simulate a successful registration
+    login({ name, email, role });
+    navigate('/dashboard');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="max-w-md mx-auto pt-16">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Create your account</h2>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <Input
+              id="name"
+              name="name"
+              type="text"
+              autoComplete="name"
+              required
+              label="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              label="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              label="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Role</label>
+              <select
+                id="role"
+                name="role"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option value="mentee">Mentee</option>
+                <option value="mentor">Mentor</option>
+              </select>
+            </div>
+            <div>
+              <Button type="submit" variant="primary" className="w-full">
+                Sign up
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SignupPage;
+
+// --- C:\Users\S\Desktop\clones\MentorConnect\frontend\src\UserContext.jsx ---
+
+import React, { createContext, useState, useEffect } from 'react';
+
+export const UserContext = createContext();
+
+export const UserProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
+
+  const login = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  const updateUser = (updatedData) => {
+    const updatedUser = { ...user, ...updatedData };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
+  return (
+    <UserContext.Provider value={{ user, login, logout, updateUser }}>
+      {children}
+    </UserContext.Provider>
+  );
+};
